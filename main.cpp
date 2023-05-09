@@ -20,7 +20,7 @@ Image GenImageFastNoiseLite(int width, int height, float frequency);
 Image RayTracedImage(int width, int height);
 
 bool hit_sphere(Vector3 center, float radius, Ray *ray) {
-    Vector3 oc = {ray->position.x - center.x, ray->position.y - center.y, ray->position.z - center.z};
+    Vector3 oc = Vector3Subtract(ray->position, center);
     float a = Vector3DotProduct(ray->direction, ray->direction);
     float b = 2.0 * Vector3DotProduct(oc, ray->direction);
     float c = Vector3DotProduct(oc, oc) - radius*radius;
@@ -33,7 +33,7 @@ Vector3 get_ray_colour(Ray *ray){
     float r = ((ray->direction.x + 1) / 2) * 255;
     float g = ((ray->direction.y + 1) / 2) * 255;
     float b = ((ray->direction.z + 1) / 2) * 255;
-    if (hit_sphere((Vector3){0,0,-1}, 0.05, ray)){
+    if (hit_sphere((Vector3){0,0,-10}, 0.5, ray)){
         return (Vector3){255,0,0};
     }
     return (Vector3){r,g,b};
@@ -70,7 +70,7 @@ int main()
     {
         for (int x = 0; x < imageWidth; x++)
         {
-            Ray ray = {(Vector3){0,0,0}, (Vector3){(((float)x)-(imageWidth/2))/imageWidth,((float)y-(imageHeight/2))/imageHeight,1}};
+            Ray ray = {(Vector3){0,0,0}, (Vector3){(((float)x)-(imageWidth/2))/imageWidth,((float)y-(imageHeight/2))/imageWidth,1}};
             Vector3 colour = get_ray_colour(&ray);
             pixels[y*imageWidth + x] = (Color){ colour.x, colour.y, colour.z, 255 };
         }
