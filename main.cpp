@@ -1,6 +1,5 @@
 #include "FastNoiseLite.h"
 #include "raylib.h"
-#include "raymath.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -8,22 +7,9 @@
 #include <iostream>
 
 #include "Vector3.hpp"
-
-typedef struct Ray {
-    Vec3 position;
-    Vec3 direction;
-} Ray;
-
-struct hit_record {
-    Vec3 p;
-    Vec3 normal;
-    double t;
-};
-
-class hittable {
-    public:
-        virtual bool hit(const Ray& r, double t_min, double t_max, hit_record& rec) const = 0;
-};
+#include "ray.hpp"
+#include "hitable.hpp"
+#include "sphere.hpp"
 
 int screenWidth = GetScreenWidth();
 int screenHeight = GetScreenHeight();
@@ -96,7 +82,7 @@ int main()
     {
         for (int x = 0; x < imageWidth; x++)
         {
-            Vec3 direction = Vec3(((-(float)x)+(imageWidth/2)),(-(float)y+(imageHeight/2)),-1920);
+            Vec3 direction = Vec3((((float)x)-(imageWidth/2)),(-(float)y+(imageHeight/2)),-1920);
             //direction = Vec3Scale(direction, 1/Vec3Length(direction));
             direction = unit_vector(direction);
             //std::cout << direction.z << "\n";
