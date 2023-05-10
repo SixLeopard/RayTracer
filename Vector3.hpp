@@ -4,6 +4,8 @@
 #include <cmath>
 #include <iostream>
 
+#include "util.hpp"
+
 class Vec3 {
     public:
         public:
@@ -39,6 +41,14 @@ class Vec3 {
 
             float length() const {
                 return sqrt(length_squared());
+            }
+
+            inline static Vec3 random() {
+                return Vec3(random_float(), random_float(), random_float());
+            }
+
+            inline static Vec3 random(float min, float max){
+                return Vec3(random_float(min, max), random_float(min, max), random_float(min, max));
             }
 };
 
@@ -88,6 +98,20 @@ inline Vec3 unit_vector(Vec3 v) {
 
 inline Vec3 add_scalar(const Vec3 &v, const float t) {
                 return Vec3(v.x+t, v.y+t, v.z+t);
-            }
+}
+
+Vec3 random_in_unit_sphere() {
+    while (true){
+        Vec3 p = Vec3::random(-1,1);
+        if (p.length_squared() >= 1){
+            continue;
+        }
+        return p;
+    }
+}
+
+Vec3 random_unit_vector() {
+    return unit_vector(random_in_unit_sphere());
+}
 
 #endif

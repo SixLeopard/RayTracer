@@ -10,11 +10,17 @@
 #include "ray.hpp"
 #include "hitable.hpp"
 #include "sphere.hpp"
+#include "hitable_list.hpp"
+#include "util.hpp"
+#include "camera.hpp"
 
 int screenWidth = GetScreenWidth();
 int screenHeight = GetScreenHeight();
 int imageWidth = 1920;
 int imageHeight = 1080;
+int progress = 0;
+int max_depth = 5;
+int sampels_per_pixels = 100;
 Texture noiseimagedata; //remove later
 Texture raytracedimagedata; //remove later
 Texture whitness;
@@ -41,13 +47,18 @@ float hit_sphere(Vec3 center, float radius, Ray *ray) {
     }
 }
 
-Vec3 get_ray_colour(Ray *ray){
-    float t = hit_sphere(Vec3(0,0,-3), 0.5f, ray);
-    if (t > 0.0){
-        Vec3 n = ray_at(t, ray) - Vec3(0,0,-1);
-        return 0.5 * (add_scalar(n, 1));
+Vec3 ray_colour(Ray *ray, const hitable& scene, int depth){
+    hit_record rec;
+
+    if (depth >= max_depth)
+        return Vec3(0,0,0);
+
+    if (scene.hit(ray, 0.001f, infinity, rec)){
+        Vec3 target = rec.p + rec.normal + random_unit_vector();
+        Ray new_ray = {rec.p, target - rec.p};
+        return 0.5 * ray_colour(&new_ray, scene, depth + 1);
     }
-    t = 0.5*(ray->direction.y + 1.0);
+    float t = 0.5*(ray->direction.y + 1.0);
     return (1.0-t)*Vec3(1.0, 1.0, 1.0) + t*Vec3(0.5, 0.7, 1.0);
 }
 
@@ -76,21 +87,33 @@ int main()
 
     //Shader raytracer = LoadShader(0, "resources/RayTracer.fs");
 
+    hitable_list scene;
+    scene.add(make_shared<sphere>(Vec3(0,0,-3), 0.5f));
+    scene.add(make_shared<sphere>(Vec3(0,-100.5,-3), 100.0f));
+    rt_camera rtcamera = rt_camera();
+
     //----------------Ray-Trace----------------//
     Color *pixels = (Color *)RL_MALLOC(imageWidth*imageHeight*sizeof(Color));
     for (int y = 0; y < imageHeight; y++)
     {
         for (int x = 0; x < imageWidth; x++)
         {
-            Vec3 direction = Vec3((((float)x)-(imageWidth/2)),(-(float)y+(imageHeight/2)),-1920);
-            //direction = Vec3Scale(direction, 1/Vec3Length(direction));
-            direction = unit_vector(direction);
-            //std::cout << direction.z << "\n";
-            Ray ray = {Vec3(0,0,0), direction};
-            Vec3 colour = get_ray_colour(&ray);
-            colour = colour * 255;
-            pixels[y*imageWidth + x] = (Color){ colour.x, colour.y, colour.z, 255 };
+            Vec3 pixel_colour(0,0,0);
+            for (int s = 0; s < sampels_per_pixels; s++){
+                float u = (x + random_float(-1,1));
+                float v = (y + random_float(-1,1));
+                Ray ray = rtcamera.get_ray(u,v);
+                Vec3 colour = ray_colour(&ray, scene, 0);
+                colour = Vec3(sqrt(colour.x),sqrt(colour.y),sqrt(colour.z));
+                colour = colour * 255;
+                pixel_colour += colour;
+            }
+            pixel_colour = pixel_colour / sampels_per_pixels;
+            pixels[y*imageWidth + x] = (Color){ pixel_colour.x, pixel_colour.y, pixel_colour.z, 255 };
         }
+        if ((y+1)%100 == 0 || y == imageHeight -1)
+            std::cout << "line " << y+1 << " out of " << imageHeight << "\n";
+        progress = y;
     }
 
     Image final_image = {
