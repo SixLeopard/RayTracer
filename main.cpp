@@ -6,11 +6,17 @@
 #include <string.h>
 #include <pthread.h>
 #include <iostream>
-//#include "Vector3.hpp"
+
+#include "Vector3.hpp"
+
+typedef struct Ray {
+    Vec3 position;
+    Vec3 direction;
+} Ray;
 
 struct hit_record {
-    Vector3 p;
-    Vector3 normal;
+    Vec3 p;
+    Vec3 normal;
     double t;
 };
 
@@ -31,15 +37,15 @@ void UpdateDrawFrame(Camera2D* camera);     // Update and Draw one frame
 Image GenImageFastNoiseLite(int width, int height, float frequency);
 Image RayTracedImage(int width, int height);
 
-Vector3 ray_at(float p, Ray* ray){
-    return Vector3Add(ray->position, Vector3Scale(ray->direction, p));
+Vec3 ray_at(float p, Ray* ray){
+    return ray->position + ray->direction * p;
 }
 
-float hit_sphere(Vector3 center, float radius, Ray *ray) {
-    Vector3 oc = Vector3Subtract(ray->position, center);
-    float a = Vector3LengthSqr(ray->direction);
-    float half_b = Vector3DotProduct(oc, ray->direction);
-    float c = Vector3LengthSqr(oc) - radius*radius;
+float hit_sphere(Vec3 center, float radius, Ray *ray) {
+    Vec3 oc = ray->position - center;
+    float a =ray->direction.length_squared();
+    float half_b = dot(oc, ray->direction);
+    float c = oc.length_squared() - radius*radius;
     float discriminant = half_b*half_b - a*c;
     if (discriminant < 0) {
         return -1.0;
@@ -49,14 +55,14 @@ float hit_sphere(Vector3 center, float radius, Ray *ray) {
     }
 }
 
-Vector3 get_ray_colour(Ray *ray){
-    float t = hit_sphere((Vector3){0,0,-3}, 0.5f, ray);
+Vec3 get_ray_colour(Ray *ray){
+    float t = hit_sphere(Vec3(0,0,-3), 0.5f, ray);
     if (t > 0.0){
-        Vector3 n = Vector3Subtract(ray_at(t, ray), (Vector3){0,0,-1});
-        return Vector3Scale(Vector3AddValue(n, 1), 0.5);
+        Vec3 n = ray_at(t, ray) - Vec3(0,0,-1);
+        return 0.5 * (add_scalar(n, 1));
     }
     t = 0.5*(ray->direction.y + 1.0);
-    return Vector3Add(Vector3Scale((Vector3){1.0, 1.0, 1.0}, (1.0-t)), Vector3Scale((Vector3){0.5, 0.7, 1.0},t));
+    return (1.0-t)*Vec3(1.0, 1.0, 1.0) + t*Vec3(0.5, 0.7, 1.0);
 }
 
 int main()
@@ -90,13 +96,13 @@ int main()
     {
         for (int x = 0; x < imageWidth; x++)
         {
-            Vector3 direction = (Vector3){((-(float)x)+(imageWidth/2)),(-(float)y+(imageHeight/2)),-1920};
-            //direction = Vector3Scale(direction, 1/Vector3Length(direction));
-            direction = Vector3Normalize(direction);
+            Vec3 direction = Vec3(((-(float)x)+(imageWidth/2)),(-(float)y+(imageHeight/2)),-1920);
+            //direction = Vec3Scale(direction, 1/Vec3Length(direction));
+            direction = unit_vector(direction);
             //std::cout << direction.z << "\n";
-            Ray ray = {(Vector3){0,0,0}, direction};
-            Vector3 colour = get_ray_colour(&ray);
-            colour = Vector3Scale(colour, 255);
+            Ray ray = {Vec3(0,0,0), direction};
+            Vec3 colour = get_ray_colour(&ray);
+            colour = colour * 255;
             pixels[y*imageWidth + x] = (Color){ colour.x, colour.y, colour.z, 255 };
         }
     }
