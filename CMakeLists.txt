@@ -3,6 +3,7 @@ project(RayTracer)
 
 # Generate compile_commands.json
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+set(CMAKE_CXX_FLAGS "-O3")
 
 # Dependencies
 set(RAYLIB_VERSION 4.2.0)
@@ -26,8 +27,13 @@ endif()
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "../bin")
 add_executable(${PROJECT_NAME} main.cpp)
 #set(raylib_VERBOSE 1)
-target_link_libraries(${PROJECT_NAME} raylib)
 
+find_package(OpenMP)
+
+if(OpenMP_CXX_FOUND)
+  target_link_libraries(${PROJECT_NAME} raylib 
+  OpenMP::OpenMP_CXX )
+endif()
 
 add_custom_target(copy_resources ALL
         COMMAND ${CMAKE_COMMAND} -E copy_directory

@@ -50,6 +50,65 @@ class Vec3 {
             inline static Vec3 random(float min, float max){
                 return Vec3(random_float(min, max), random_float(min, max), random_float(min, max));
             }
+
+            bool near_zero() const {
+                const auto s = 1e-8;
+                return (fabs(x) < s) && (fabs(y) < s) && (fabs(z) < s);
+            }
+            void rotate(Vec3 axis, float angle)
+            {
+                angle = degrees_to_radians(angle);
+                // Using Euler-Rodrigues Formula
+                // Ref.: https://en.wikipedia.org/w/index.php?title=Euler%E2%80%93Rodrigues_formula
+                Vec3 v = Vec3(x,y,z);
+
+                Vec3 result = v;
+
+                // Vector3Normalize(axis);
+                float length = sqrtf(axis.x * axis.x + axis.y * axis.y + axis.z * axis.z);
+                if (length == 0.0f) length = 1.0f;
+                float ilength = 1.0f / length;
+                axis.x *= ilength;
+                axis.y *= ilength;
+                axis.z *= ilength;
+
+                angle /= 2.0f;
+                float a = sinf(angle);
+                float b = axis.x * a;
+                float c = axis.y * a;
+                float d = axis.z * a;
+                a = cosf(angle);
+                Vec3 w = { b, c, d };
+
+                // Vector3CrossProduct(w, v)
+                Vec3 wv = { w.y * v.z - w.z * v.y, w.z * v.x - w.x * v.z, w.x * v.y - w.y * v.x };
+
+                // Vector3CrossProduct(w, wv)
+                Vec3 wwv = { w.y * wv.z - w.z * wv.y, w.z * wv.x - w.x * wv.z, w.x * wv.y - w.y * wv.x };
+
+                // Vector3Scale(wv, 2 * a)
+                a *= 2;
+                wv.x *= a;
+                wv.y *= a;
+                wv.z *= a;
+
+                // Vector3Scale(wwv, 2)
+                wwv.x *= 2;
+                wwv.y *= 2;
+                wwv.z *= 2;
+
+                result.x += wv.x;
+                result.y += wv.y;
+                result.z += wv.z;
+
+                result.x += wwv.x;
+                result.y += wwv.y;
+                result.z += wwv.z;
+
+                x = result.x;
+                y = result.y;
+                z = result.z;
+            }
 };
 
 inline std::ostream& operator<<(std::ostream &out, const Vec3 &v) {
@@ -112,6 +171,10 @@ Vec3 random_in_unit_sphere() {
 
 Vec3 random_unit_vector() {
     return unit_vector(random_in_unit_sphere());
+}
+
+Vec3 reflect(const Vec3& v, const Vec3& n) {
+    return v - 2*dot(v,n)*n;
 }
 
 #endif

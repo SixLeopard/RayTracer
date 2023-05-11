@@ -5,9 +5,12 @@
 #include <limits>
 #include <memory>
 #include <cstdlib>
+#include <random>
 
 inline float random_float() {
-    return rand() / (RAND_MAX + 1.0);
+    static std::uniform_real_distribution<double> distribution(0.0, 1.0);
+    static std::mt19937 generator;
+    return distribution(generator);
 }
 
 inline float random_float(float min, float max) {
@@ -24,7 +27,7 @@ inline float clamp(float x, float min, float max){
     return x;
 }
 
-typedef struct Colour {
+struct Colour {
     unsigned char r;
     unsigned char g;
     unsigned char b;
@@ -38,5 +41,9 @@ typedef struct Colour {
         return *this;
     }
 };
+
+inline float degrees_to_radians(float degrees) {
+    return degrees * PI / 180.0;
+}
 
 #endif

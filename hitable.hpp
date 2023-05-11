@@ -2,10 +2,17 @@
 #define HITABLE_H
 
 #include "Vector3.hpp"
+//#include "material.hpp"
+
+using std::shared_ptr;
+using std::make_shared;
+
+class material;
 
 struct hit_record {
     Vec3 p;
     Vec3 normal;
+    shared_ptr<material> mat;
     double t;
     bool front_face;
 
