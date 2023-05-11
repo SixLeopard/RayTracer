@@ -23,7 +23,7 @@ int imageWidth = 1920;
 int imageHeight = 1080;
 int progress = 0;
 int max_depth = 10;
-int sampels_per_pixels = 1000;
+int sampels_per_pixels = 500;
 Texture noiseimagedata; //remove later
 Texture raytracedimagedata; //remove later
 Texture whitness;
@@ -94,6 +94,11 @@ int main()
     scene.add(make_shared<sphere>(Vec3( 0.0,    0.0, -3.0),   0.5, material_center));
     scene.add(make_shared<sphere>(Vec3(-1.0,    10.0, -3.0),   7, material_left));
     scene.add(make_shared<sphere>(Vec3( 1.0,    0.0, -3.0),   0.5, material_right));
+    scene.add(make_shared<sphere>(Vec3( 0.5,    0.0, -4.0),   0.5, material_right));
+    scene.add(make_shared<sphere>(Vec3( -0.5,    0.0, -2.0),   0.5, material_right));
+    scene.add(make_shared<sphere>(Vec3( 2.0,    0.0, -3.0),   0.5, material_center));
+    scene.add(make_shared<sphere>(Vec3( -2.0,    0.0, -3.0),   0.5, material_center));
+
 
     rt_camera rtcamera = rt_camera();
 

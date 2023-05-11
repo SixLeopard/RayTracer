@@ -181,4 +181,12 @@ Vec3 vec3_clamp(const Vec3& value, const Vec3& min, const Vec3& max){
     return Vec3(clamp(value.x, min.x, max.x),clamp(value.y, min.y, max.y),clamp(value.z, min.z, max.y));
 }
 
+Vec3 random_in_unit_disk() {
+    while (true) {
+        auto p = Vec3(random_float(-1,1), random_float(-1,1), 0);
+        if (p.length_squared() >= 1) continue;
+        return p;
+    }
+}
+
 #endif
