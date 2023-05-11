@@ -177,4 +177,8 @@ Vec3 reflect(const Vec3& v, const Vec3& n) {
     return v - 2*dot(v,n)*n;
 }
 
+Vec3 vec3_clamp(const Vec3& value, const Vec3& min, const Vec3& max){
+    return Vec3(clamp(value.x, min.x, max.x),clamp(value.y, min.y, max.y),clamp(value.z, min.z, max.y));
+}
+
 #endif

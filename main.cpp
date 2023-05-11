@@ -22,8 +22,8 @@ int screenHeight = GetScreenHeight();
 int imageWidth = 1920;
 int imageHeight = 1080;
 int progress = 0;
-int max_depth = 5;
-int sampels_per_pixels = 10;
+int max_depth = 10;
+int sampels_per_pixels = 1000;
 Texture noiseimagedata; //remove later
 Texture raytracedimagedata; //remove later
 Texture whitness;
@@ -36,20 +36,6 @@ Vec3 ray_at(float p, Ray* ray){
     return ray->position + ray->direction * p;
 }
 
-float hit_sphere(Vec3 center, float radius, Ray *ray) {
-    Vec3 oc = ray->position - center;
-    float a =ray->direction.length_squared();
-    float half_b = dot(oc, ray->direction);
-    float c = oc.length_squared() - radius*radius;
-    float discriminant = half_b*half_b - a*c;
-    if (discriminant < 0) {
-        return -1.0;
-    }
-    else{
-        return (-half_b - sqrt(discriminant)) / a;
-    }
-}
-
 Vec3 ray_colour(Ray *ray, const hitable& scene, int depth){
     hit_record rec;
 
@@ -59,13 +45,17 @@ Vec3 ray_colour(Ray *ray, const hitable& scene, int depth){
     if (scene.hit(ray, 0.001f, infinity, rec)){
         Ray scattered;
         Vec3 attenuation;
+        Vec3 emission;
         if (rec.mat->scatter(ray, rec, attenuation, &scattered)) {
             return attenuation * ray_colour(&scattered, scene, depth+1);
+        }
+        if (rec.mat->emitted(emission)){
+            return emission;
         }
         return Vec3(0,0,0);
     }
     float t = 0.5*(ray->direction.y + 1.0);
-    return (1.0-t)*Vec3(1.0, 1.0, 1.0) + t*Vec3(0.5, 0.7, 1.0);
+    return ((1.0-t)*Vec3(1.0, 1.0, 1.0) + t*Vec3(0.5, 0.7, 1.0))/10;
 }
 
 int main()
@@ -97,12 +87,12 @@ int main()
     
     auto material_ground = make_shared<diffuse>(Vec3(0.0, 0.1, 0.8));
     auto material_center = make_shared<diffuse>(Vec3(1.0, 1.0, 1.0));
-    auto material_left   = make_shared<specular>(Vec3(0.5, 0.5, 0.8));
-    auto material_right  = make_shared<specular>(Vec3(0.2, 0.1, 0.8));
+    auto material_left   = make_shared<emissive>(Vec3(1, 1, 1), 1000000);
+    auto material_right  = make_shared<metallic>(Vec3(0.2, 0.1, 0.8), 0.5f);
 
     scene.add(make_shared<sphere>(Vec3( 0.0, -100.5, -1.0), 100.0, material_ground));
     scene.add(make_shared<sphere>(Vec3( 0.0,    0.0, -3.0),   0.5, material_center));
-    scene.add(make_shared<sphere>(Vec3(-1.0,    0.0, -3.0),   0.5, material_left));
+    scene.add(make_shared<sphere>(Vec3(-1.0,    10.0, -3.0),   7, material_left));
     scene.add(make_shared<sphere>(Vec3( 1.0,    0.0, -3.0),   0.5, material_right));
 
     rt_camera rtcamera = rt_camera();
@@ -120,7 +110,7 @@ int main()
                 float u = (x + random_float(-1,1));
                 float v = (y + random_float(-1,1));
                 Ray ray = rtcamera.get_ray(u,v);
-                Vec3 colour = ray_colour(&ray, scene, 0);
+                Vec3 colour = vec3_clamp(ray_colour(&ray, scene, 0), Vec3(0,0,0), Vec3(1,1,1));
                 colour = Vec3(sqrt(colour.x),sqrt(colour.y),sqrt(colour.z));
                 colour = colour * 255;
                 pixel_colour += colour;

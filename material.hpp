@@ -10,6 +10,10 @@
 class material {
     public:
         virtual bool scatter(Ray *ray_in, const hit_record& rec, Vec3& attenuation, Ray *ray_out) const = 0;
+        
+        virtual bool emitted(Vec3& colour_out) const {
+            return false;
+        }
 };
 
 class diffuse : public material {
@@ -40,6 +44,36 @@ class specular : public material {
             *ray_out = {rec.p, reflected};
             attenuation = albedo;
             return (dot(ray_out->direction, rec.normal) > 0);;
+        }
+};
+
+class metallic : public material {
+    public:
+        metallic(const Vec3& Albedo, float Roughness) : albedo(Albedo), roughness(Roughness <= 1.0f ? Roughness : 1.0f) {}
+        Vec3 albedo;
+        float roughness;
+
+        virtual bool scatter(Ray *ray_in, const hit_record& rec, Vec3& attenuation, Ray *ray_out) const override {
+            Vec3 reflected = reflect(unit_vector(ray_in->direction), rec.normal);
+            *ray_out = {rec.p, reflected + roughness*random_in_unit_sphere()};
+            attenuation = albedo;
+            return (dot(ray_out->direction, rec.normal) > 0);;
+        }
+};
+
+class emissive : public material {
+    public:
+        emissive(const Vec3& Albedo, float Intensity) : albedo(Albedo), intensity(Intensity) {}
+        Vec3 albedo;
+        float intensity;
+
+        virtual bool scatter(Ray *ray_in, const hit_record& rec, Vec3& attenuation, Ray *ray_out) const override {
+            return false;
+        }
+
+        virtual bool emitted(Vec3& colour_out) const override {
+            colour_out = albedo * intensity;
+            return true;
         }
 };
 
